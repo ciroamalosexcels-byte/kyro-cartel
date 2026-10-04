@@ -10,90 +10,97 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#000; --led:#0026ff; --brillo:#3d5cff; --apagado:#050a26; --casco:#03040c; }
+  :root { --bg:#000; --led:#0026ff; --brillo:#3d5cff; --apagado:#050a26; --casco:#03040c;
+          --boton:clamp(50px, 17vw, 76px); --letra:clamp(7px, 2.2vw, 10px); }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; background:var(--bg); color:var(--brillo); }
-  body { font:8px/1.6 "Press Start 2P", ui-monospace, monospace; text-transform:uppercase; min-height:100vh; display:flex; justify-content:center; }
-  main { width:100%; max-width:340px; padding:18px 16px 32px; }
-  .casco { background:var(--casco); border:4px solid var(--led); box-shadow:0 0 0 4px var(--casco), 0 0 0 6px var(--apagado), 0 0 28px #0026ff55; padding:14px 10px 16px; display:grid; gap:12px; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--brillo); overflow:hidden; }
+  body { font:var(--letra)/1.6 "Press Start 2P", ui-monospace, monospace; text-transform:uppercase; }
+  /* todo el celular: el cuadro ocupa la pantalla entera, sin márgenes ni nada afuera */
+  .casco { height:100dvh; width:100%; max-width:560px; margin:0 auto; background:var(--casco);
+           border:3px solid var(--led); box-shadow:inset 0 0 0 2px var(--casco), inset 0 0 24px #0026ff33;
+           padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom));
+           display:flex; flex-direction:column; gap:8px; }
   .brilla { color:var(--brillo); text-shadow:0 0 6px var(--led), 0 0 12px var(--led); }
-  h1 { margin:0; text-align:center; font-size:10px; font-weight:400; letter-spacing:.08em; }
-  #animo { text-align:center; min-height:1.6em; }
-  .juego { display:grid; grid-template-columns:52px minmax(0, 1fr) 52px; gap:8px; align-items:start; }
-  .col { display:grid; gap:6px; }
-  .pantalla { position:relative; display:grid; place-items:center; padding:6px; background:#000; border:2px solid var(--apagado); min-height:120px; }
+  header { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  h1 { margin:0; font-size:calc(var(--letra) * 1.15); font-weight:400; }
+  #animo { text-align:right; }
+  .juego { flex:1; min-height:0; display:grid; grid-template-columns:var(--boton) minmax(0, 1fr) var(--boton); gap:8px; }
+  .col { display:grid; grid-auto-rows:minmax(0, 1fr); gap:6px; min-height:0; }
+  .pantalla { position:relative; display:grid; place-items:center; background:#000; border:2px solid var(--apagado); min-height:0; overflow:hidden; }
   #leds { display:block; }
-  #espera { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:10px; font-size:7px; background:#000d; line-height:2; }
+  #espera { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:10px; background:#000d; line-height:2; }
   #espera[hidden] { display:none; }
-  button { font:inherit; font-size:6px; color:var(--brillo); background:#000; border:2px solid var(--led); padding:6px 2px 5px; cursor:pointer; display:grid; gap:5px; justify-items:center; text-transform:uppercase; letter-spacing:0; }
-  button svg { width:24px; height:24px; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
+  button { font:inherit; font-size:calc(var(--letra) * .75); color:var(--brillo); background:#000; border:2px solid var(--led); padding:4px 2px; cursor:pointer; display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; text-transform:uppercase; letter-spacing:0; min-height:0; }
+  button svg { width:calc(var(--boton) * .45); height:calc(var(--boton) * .45); max-height:60%; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
   button:active, button.ok { background:var(--led); color:#000; }
   button:active svg, button.ok svg { filter:none; }
   button:disabled { opacity:.4; }
-  .ancho .juego { grid-template-columns:minmax(0, 1fr); }
+  .ancho .juego { grid-template-columns:minmax(0, 1fr); grid-template-rows:minmax(0, 1fr) auto auto; }
   .ancho .pantalla { order:-1; }
-  .ancho .col { grid-template-columns:repeat(5, 1fr); }
-  .barras { display:grid; gap:8px; }
-  .barra { display:grid; grid-template-columns:68px 1fr; align-items:center; gap:8px; font-size:7px; }
+  .ancho .col { grid-template-columns:repeat(5, 1fr); grid-auto-rows:var(--boton); }
+  .barras { display:grid; gap:6px; }
+  .barra { display:grid; grid-template-columns:9.5em 1fr; align-items:center; gap:8px; font-size:calc(var(--letra) * .85); }
+  .barra[hidden] { display:none; }
   .segmentos { display:grid; grid-template-columns:repeat(10, 1fr); gap:2px; }
-  .segmentos i { height:8px; background:var(--apagado); }
+  .segmentos i { height:calc(var(--letra) * 1.1); background:var(--apagado); }
   .segmentos i.on { background:var(--led); box-shadow:0 0 5px var(--led); }
   .barra.baja .segmentos i.on { animation:titila 1s steps(1) infinite; }
   @keyframes titila { 50% { opacity:.2; } }
-  .musica { display:grid; grid-template-columns:14px minmax(0, 1fr); gap:8px; align-items:center; border-top:2px solid var(--apagado); padding-top:10px; }
-  .musica[hidden] { display:none; }
-  .musica svg { width:14px; height:14px; shape-rendering:crispEdges; }
-  .cinta { min-width:0; overflow:hidden; white-space:nowrap; font-size:7px; }
+  .pie { display:grid; grid-template-columns:auto minmax(0, 1fr) auto; gap:8px; align-items:center; border-top:2px solid var(--apagado); padding-top:6px; font-size:calc(var(--letra) * .85); min-height:2.2em; }
+  .pie svg { width:1.6em; height:1.6em; shape-rendering:crispEdges; }
+  .pie[data-sin-musica] svg, .pie[data-sin-musica] .cinta { visibility:hidden; }
+  .cinta { min-width:0; overflow:hidden; white-space:nowrap; }
   .cinta span { display:inline-block; padding-left:100%; animation:pasa 14s linear infinite; }
   .cinta.quieta span { padding-left:0; animation:none; }
   @keyframes pasa { to { transform:translateX(-100%); } }
-  #aviso { text-align:center; min-height:1.6em; font-size:7px; }
+  #aviso { position:fixed; left:50%; bottom:calc(14px + env(safe-area-inset-bottom)); transform:translateX(-50%); padding:8px 12px; background:#000; border:2px solid var(--led); white-space:nowrap; font-size:calc(var(--letra) * .85); }
+  #aviso:empty { display:none; }
   #aviso.err { animation:titila 1s steps(1) 3; }
-  .info { text-align:center; font-size:6px; color:#2a3a9a; margin-top:14px; line-height:2; }
-  a { color:var(--brillo); }
+  a { color:var(--brillo); text-decoration:none; }
 </style>
 </head>
 <body>
-<main>
-  <div class="casco" id="casco">
-    <h1 class="brilla">KYRO TAMAGOTCHI</h1>
+<main class="casco" id="casco">
+  <header>
+    <h1 class="brilla">KYRO</h1>
     <div id="animo" class="brilla">—</div>
+  </header>
 
-    <div class="juego">
-      <div class="col" aria-label="Decorar la pecera">
-        <button data-accion="planta" data-icono="planta">PLANTA</button>
-        <button data-accion="roca" data-icono="roca">PIEDRA</button>
-        <button data-accion="castillo" data-icono="castillo">CASTILLO</button>
-        <button data-accion="concha" data-icono="concha">CONCHA</button>
-        <button data-accion="quitar" data-icono="quitar">QUITAR</button>
-      </div>
-      <div class="pantalla">
-        <canvas id="leds"></canvas>
-        <div id="espera" class="brilla">ESPERANDO AL CARTEL…</div>
-      </div>
-      <div class="col" aria-label="Cuidar al pez">
-        <button data-accion="comer" data-icono="comer">COMIDA</button>
-        <button data-accion="limpiar" data-icono="limpiar">LIMPIAR</button>
-        <button data-accion="jugar" data-icono="jugar">JUGAR</button>
-        <button data-accion="curar" data-icono="curar">CURAR</button>
-        <button data-accion="luz" data-icono="luz">LUZ</button>
-      </div>
+  <div class="juego">
+    <div class="col" aria-label="Decorar la pecera">
+      <button data-accion="planta" data-icono="planta">PLANTA</button>
+      <button data-accion="roca" data-icono="roca">PIEDRA</button>
+      <button data-accion="castillo" data-icono="castillo">CASTILLO</button>
+      <button data-accion="concha" data-icono="concha">CONCHA</button>
+      <button data-accion="quitar" data-icono="quitar">QUITAR</button>
     </div>
-
-    <div class="barras">
-      <div class="barra" id="bHambre">PANCITA<div class="segmentos"></div></div>
-      <div class="barra" id="bFeliz">FELICIDAD<div class="segmentos"></div></div>
-      <div class="barra" id="bLimpio">LIMPIEZA<div class="segmentos"></div></div>
+    <div class="pantalla">
+      <canvas id="leds"></canvas>
+      <div id="espera" class="brilla">ESPERANDO AL CARTEL…</div>
     </div>
-
-    <div class="musica" id="musica" hidden>
-      <svg data-icono="nota" viewBox="0 0 7 8"></svg>
-      <div class="cinta" id="cinta"><span class="brilla" id="cancion"></span></div>
+    <div class="col" aria-label="Cuidar al pez">
+      <button data-accion="comer" data-icono="comer">COMIDA</button>
+      <button data-accion="limpiar" data-icono="limpiar">LIMPIAR</button>
+      <button data-accion="jugar" data-icono="jugar">JUGAR</button>
+      <button data-accion="curar" data-icono="curar">CURAR</button>
+      <button data-accion="luz" data-icono="luz">LUZ</button>
     </div>
-
-    <div id="aviso" class="brilla" role="status"></div>
   </div>
-  <div class="info">LOS MISMOS LEDS QUE EL CARTEL<br><a href="https://ciroamalosexcels-byte.github.io/kyro-cartel/">MANDAR UN MENSAJE</a></div>
+
+  <div class="barras">
+    <div class="barra" id="bHambre">PANCITA<div class="segmentos"></div></div>
+    <div class="barra" id="bFeliz">FELICIDAD<div class="segmentos"></div></div>
+    <div class="barra" id="bLimpio">LIMPIEZA<div class="segmentos"></div></div>
+    <div class="barra" id="bTamano" hidden>TAMAÑO<div class="segmentos"></div></div>
+  </div>
+
+  <div class="pie" id="pie" data-sin-musica>
+    <svg data-icono="nota" viewBox="0 0 7 8"></svg>
+    <div class="cinta" id="cinta"><span class="brilla" id="cancion"></span></div>
+    <a href="https://ciroamalosexcels-byte.github.io/kyro-cartel/" title="Mandar un mensaje al cartel">MENSAJE</a>
+  </div>
+
+  <div id="aviso" class="brilla" role="status"></div>
 </main>
 
 <script>
@@ -136,31 +143,37 @@ function barra(id, v) {
 }
 function mostrar(e) {
   barra("bHambre", 100 - e.hambre); barra("bFeliz", e.felicidad); barra("bLimpio", e.limpieza);
+  if (e.nivel) {                                       // crece de a pasos: los segmentos llenos son su tamaño
+    document.querySelectorAll("#bTamano i").forEach((s, k) => s.classList.toggle("on", k < Math.round(10 * e.nivel / e.nivel_max)));
+  }
+  $("#bTamano").hidden = !e.nivel;
   $("#animo").textContent = ANIMO[e.humor] || e.humor;
   const musica = "musica" in e ? e.musica : null;
-  $("#musica").hidden = !musica;
+  $("#pie").toggleAttribute("data-sin-musica", !musica);
   if (musica && $("#cancion").textContent !== musica) {
     $("#cancion").textContent = musica;
-    $("#cinta").classList.toggle("quieta", musica.length <= 22);
+    $("#cinta").classList.toggle("quieta", musica.length <= 16);
   }
 }
 
 // --- La pantalla: los mismos cuadros que pasa el cartel (los manda la PC) + la hora encima ---
 const ON = "#2a4bff", OFF = "#050a26", BRILLO = "#0026ff";
-const DIGITOS = {
+const DIGITOS = Object.fromEntries(Object.entries({   // 3x6: la raya del medio el doble de gruesa
   "0": ["111", "101", "101", "101", "111"], "1": ["010", "110", "010", "010", "111"],
   "2": ["111", "001", "111", "100", "111"], "3": ["111", "001", "111", "001", "111"],
   "4": ["101", "101", "111", "001", "001"], "5": ["111", "100", "111", "001", "111"],
   "6": ["111", "100", "111", "101", "111"], "7": ["111", "001", "010", "010", "010"],
   "8": ["111", "101", "111", "101", "111"], "9": ["111", "101", "111", "001", "111"],
-};
+}).map(([k, v]) => [k, [...v.slice(0, 3), ...v.slice(2)]]));
+const RELOJ_ALTO = 7;
 const lienzo = $("#leds"), g = lienzo.getContext("2d");
 let leds = null, cuadros = [], dot = 4, dibujado = "";
 
 function medir(w, h) {
   $("#casco").classList.toggle("ancho", w > h);
-  const maxW = $(".pantalla").clientWidth - 16;
-  dot = w > h ? Math.max(2, Math.floor(maxW / w)) : Math.max(2, Math.min(4, Math.floor((innerHeight * 0.62) / h)));
+  lienzo.style.width = lienzo.style.height = "0";      // que no empuje la medida del lugar libre
+  const caja = $(".pantalla"), libreW = caja.clientWidth - 8, libreH = caja.clientHeight - 8;
+  dot = Math.max(2, Math.floor(Math.min(libreW / w, libreH / h)));
   lienzo.width = w * dot; lienzo.height = h * dot;
   lienzo.style.width = w * dot + "px"; lienzo.style.height = h * dot + "px";
   dibujado = "";
@@ -223,16 +236,20 @@ function pintar() {
   const punto = (x, y, val) => { if (x >= 0 && x < w && y >= 0 && y < h) px[y * w + x] = val; };
   // la hora, igual que en el cartel: un renglón arriba con recuadro apagado y los dos puntos titilando
   const x0 = w >= h ? w - 16 : Math.floor((w - 15) / 2);
-  for (let y = 0; y <= 5; y++) for (let x = x0 - 1; x <= x0 + 15; x++) punto(x, y, 0);
+  for (let y = 0; y < RELOJ_ALTO; y++) for (let x = x0 - 1; x <= x0 + 15; x++) punto(x, y, 0);
   [[hora[0], 0], [hora[1], 4], [hora[3], 8], [hora[4], 12]].forEach(([d, dx]) =>
     DIGITOS[d].forEach((f, y) => [...f].forEach((b, x) => b === "1" && punto(x0 + dx + x, y, 1))));
-  if (Math.floor(i / leds.cps) % 2 === 0) { punto(x0 + 7, 1, 1); punto(x0 + 7, 3, 1); }
+  if (Math.floor(i / leds.cps) % 2 === 0) { punto(x0 + 7, 1, 1); punto(x0 + 7, 4, 1); }
   pintarLeds(px, w, h);
 }
 medir(16, 96);
 pintarLeds(new Uint8Array(16 * 96), 16, 96);
 requestAnimationFrame(pintar);
-addEventListener("resize", () => { const [w, h] = leds ? [leds.w, leds.h] : [16, 96]; medir(w, h); if (!leds) pintarLeds(new Uint8Array(w * h), w, h); });
+new ResizeObserver(() => {
+  const [w, h] = leds ? [leds.w, leds.h] : [16, 96];
+  medir(w, h);
+  if (!leds) pintarLeds(new Uint8Array(w * h), w, h);
+}).observe($(".pantalla"));
 
 // El estado lo manda la PC: por ntfy (el último que haya y después cada cambio, al instante) o,
 // abierta en la misma PC, preguntándole al servidor local.
