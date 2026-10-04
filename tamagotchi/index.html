@@ -220,7 +220,8 @@ function cuadroActual(ahora) {
     variante = Math.floor((inicio - leds.desfase) / 60000) % (leds.variantes || 1);
     if (leds.t0 > inicio && leds.t0 <= ahora) { inicio = leds.t0; variante = leds.variante || 0; }
   }
-  return [variante, Math.floor(Math.max(0, ahora - inicio) / leds.ms) % leds.n];
+  const i = Math.floor(Math.max(0, ahora - inicio) / leds.ms);
+  return [variante, leds.una_vez ? Math.min(leds.n - 1, i) : i % leds.n];   // las escenas, una sola vez
 }
 
 function pintar() {
