@@ -14,17 +14,11 @@
   main { width:100%; max-width:440px; padding:20px 16px 40px; display:grid; gap:18px; }
   .huevo { background:radial-gradient(120% 90% at 30% 20%, var(--egg), var(--egg2)); border:2px solid var(--line); border-radius:50% 50% 46% 46% / 58% 58% 42% 42%; padding:38px 26px 30px; display:grid; gap:14px; box-shadow:0 20px 60px #0008, inset 0 2px 0 #ffffff14; }
   .marca { text-align:center; font-size:12px; letter-spacing:.35em; color:var(--dim); }
-  .pantalla { position:relative; height:150px; background:#031326; border:3px solid #06223f; border-radius:14px; overflow:hidden; box-shadow:inset 0 0 30px #000; }
-  .pantalla.noche { background:#01060d; }
-  .agua { position:absolute; inset:0; background:repeating-linear-gradient(0deg, #3d9bff08 0 2px, transparent 2px 5px); }
-  #pez { position:absolute; font-size:34px; transition:left 2.2s ease-in-out, top 2.2s ease-in-out; filter:drop-shadow(0 0 6px #3d9bff88); }
-  #pez.izq { transform:scaleX(-1); }
-  #pez.duerme { filter:grayscale(.6) brightness(.6); }
-  #fondo { position:absolute; left:0; right:0; bottom:4px; display:flex; justify-content:space-around; align-items:flex-end; font-size:24px; padding:0 8px; }
-  #cacas { position:absolute; left:10px; bottom:2px; font-size:16px; letter-spacing:6px; }
-  #globo { position:absolute; font-size:20px; }
-  #reloj { position:absolute; top:6px; right:10px; font:700 14px ui-monospace, monospace; color:var(--led); }
-  #animo { position:absolute; top:6px; left:10px; font-size:12px; color:var(--dim); }
+  .pantalla { position:relative; display:grid; place-items:center; padding:14px; background:#050505; border:3px solid #06223f; border-radius:14px; box-shadow:inset 0 0 30px #000; }
+  #leds { display:block; image-rendering:pixelated; }
+  #espera { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:20px; font-size:11px; color:var(--dim); background:#050505cc; border-radius:11px; }
+  #espera[hidden] { display:none; }
+  #animo { text-align:center; font-size:12px; color:var(--dim); margin-bottom:-6px; }
   .barras { display:grid; gap:7px; }
   .barra { display:grid; grid-template-columns:96px 1fr 34px; align-items:center; gap:8px; font-size:11px; color:var(--dim); }
   .barra .riel { height:10px; background:#0006; border-radius:6px; overflow:hidden; }
@@ -49,14 +43,10 @@
 <main>
   <div class="huevo">
     <div class="marca">● KYRO TAMAGOTCHI ●</div>
-    <div class="pantalla" id="pantalla">
-      <div class="agua"></div>
-      <div id="animo">—</div>
-      <div id="reloj">--:--</div>
-      <div id="fondo"></div>
-      <div id="cacas"></div>
-      <div id="pez">🐟</div>
-      <div id="globo"></div>
+    <div id="animo">—</div>
+    <div class="pantalla">
+      <canvas id="leds"></canvas>
+      <div id="espera">ESPERANDO AL CARTEL…</div>
     </div>
     <div class="barras">
       <div class="barra">PANCITA<div class="riel"><div class="nivel" id="bHambre"></div></div><b id="vHambre">–</b></div>
@@ -83,13 +73,12 @@
   </div>
 
   <div id="aviso" role="status"></div>
-  <div class="info">LA PANTALLA DE VERDAD ES EL CARTEL LED · <a href="../">MANDAR UN MENSAJE</a></div>
+  <div class="info">LOS MISMOS LEDS QUE EL CARTEL · <a href="../">MANDAR UN MENSAJE</a></div>
 </main>
 
 <script>
 const ACCIONES = "https://ntfy.sh/kyro-cartel-2e797e508e-tama";
 const ESTADO = "https://ntfy.sh/kyro-cartel-2e797e508e-tama-estado";
-const EMOJI_DECO = { planta: "🌿", roca: "🪨", castillo: "🏰", concha: "🐚" };
 const ANIMO = { feliz: "😊 FELIZ", hambre: "😋 TIENE HAMBRE", triste: "😢 TRISTE", enfermo: "🤒 ENFERMO", dormido: "💤 DURMIENDO" };
 const $ = s => document.querySelector(s);
 let estado = null;
@@ -103,43 +92,107 @@ function mostrar(e) {
   estado = e;
   barra("Hambre", 100 - e.hambre); barra("Feliz", e.felicidad); barra("Limpio", e.limpieza);
   $("#animo").textContent = ANIMO[e.humor] || e.humor;
-  $("#fondo").innerHTML = e.decoracion.map(d => `<span>${EMOJI_DECO[d] || ""}</span>`).join("");
-  $("#cacas").textContent = "💩".repeat(e.caca);
-  $("#pantalla").classList.toggle("noche", e.dormido);
-  $("#pez").classList.toggle("duerme", e.dormido);
 }
 
-// El pez de la pantallita nada solo (el de verdad está en el cartel).
-function nadar() {
-  const p = $("#pantalla"), pez = $("#pez");
-  const w = p.clientWidth - 46, h = p.clientHeight - 70;
-  const quieto = estado && (estado.dormido || estado.humor === "enfermo");
-  const x = quieto ? w / 2 : Math.random() * w;
-  const y = quieto ? h + 18 : estado && estado.humor === "hambre" ? 22 : 24 + Math.random() * h;
-  pez.classList.toggle("izq", x < parseFloat(pez.style.left || 0));
-  pez.style.left = x + "px"; pez.style.top = y + "px";
-  const globo = $("#globo");
-  globo.textContent = !estado ? "" : estado.dormido ? "💤" : estado.humor === "hambre" ? "❗" :
-    estado.humor === "enfermo" ? "🤒" : estado.humor === "feliz" && Math.random() < .4 ? "💙" : "";
-  globo.style.left = (x + 28) + "px"; globo.style.top = Math.max(0, y - 14) + "px";
-}
-setInterval(nadar, 2300); nadar();
+// --- La pantalla: los mismos cuadros que pasa el cartel (los manda la PC) + la hora encima ---
+const ON = "#3d9bff", OFF = "#0b1a2e";
+const DIGITOS = {
+  "0": ["111", "101", "101", "101", "111"], "1": ["010", "110", "010", "010", "111"],
+  "2": ["111", "001", "111", "100", "111"], "3": ["111", "001", "111", "001", "111"],
+  "4": ["101", "101", "111", "001", "001"], "5": ["111", "100", "111", "001", "111"],
+  "6": ["111", "100", "111", "101", "111"], "7": ["111", "001", "010", "010", "010"],
+  "8": ["111", "101", "111", "101", "111"], "9": ["111", "101", "111", "001", "111"],
+};
+const lienzo = $("#leds"), g = lienzo.getContext("2d");
+let leds = null, cuadros = [], dot = 4, dibujado = "";
 
-function reloj() { $("#reloj").textContent = new Date().toTimeString().slice(0, 5); }
-setInterval(reloj, 1000); reloj();
+function medir(w, h) {
+  const maxW = $(".pantalla").clientWidth - 34, maxH = Math.min(innerHeight * 0.62, 560);
+  dot = Math.max(2, Math.floor(Math.min(maxW / w, maxH / h)));
+  lienzo.width = w * dot; lienzo.height = h * dot;
+  dibujado = "";
+}
+
+async function cargarLeds(meta, url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    const datos = new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream("deflate"))).arrayBuffer());
+    const tam = Math.ceil(meta.w / 8) * meta.h, lista = [];
+    for (let k = 0; k < meta.n; k++) {                  // cada cuadro viene como XOR del anterior
+      const c = datos.slice(k * tam, (k + 1) * tam);
+      if (k) for (let j = 0; j < tam; j++) c[j] ^= lista[k - 1][j];
+      lista.push(c);
+    }
+    if (!leds || leds.w !== meta.w || leds.h !== meta.h) medir(meta.w, meta.h);
+    leds = meta; cuadros = lista; dibujado = "";
+    $("#espera").hidden = true;
+  } catch {
+    if (!leds) { $("#espera").textContent = "EL CARTEL NO ESTÁ CONECTADO AHORA"; $("#espera").hidden = false; }
+  }
+}
+
+function cuadroActual(ahora) {
+  let inicio = leds.t0;
+  if (leds.por_minuto) {                                // el acuario se recarga en cada cambio de minuto
+    inicio = Math.floor(ahora / 60000) * 60000 + leds.desfase;
+    if (inicio > ahora) inicio -= 60000;
+    if (leds.t0 > inicio && leds.t0 <= ahora) inicio = leds.t0;
+  }
+  return Math.floor(Math.max(0, ahora - inicio) / leds.ms) % leds.n;
+}
+
+function pintar() {
+  requestAnimationFrame(pintar);
+  if (!leds || !cuadros.length) return;
+  const ahora = Date.now(), i = cuadroActual(ahora), hora = new Date().toTimeString().slice(0, 5);
+  const clave = i + hora;
+  if (clave === dibujado) return;
+  dibujado = clave;
+  const { w, h } = leds, fila = Math.ceil(w / 8), c = cuadros[i];
+  const px = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px[y * w + x] = (c[y * fila + (x >> 3)] >> (7 - (x & 7))) & 1;
+  const punto = (x, y, v) => { if (x >= 0 && x < w && y >= 0 && y < h) px[y * w + x] = v; };
+  // la hora, igual que en el cartel: un renglón arriba con recuadro apagado y los dos puntos titilando
+  const x0 = w >= h ? w - 16 : Math.floor((w - 15) / 2);
+  for (let y = 0; y <= 5; y++) for (let x = x0 - 1; x <= x0 + 15; x++) punto(x, y, 0);
+  [[hora[0], 0], [hora[1], 4], [hora[3], 8], [hora[4], 12]].forEach(([d, dx]) =>
+    DIGITOS[d].forEach((f, y) => [...f].forEach((b, x) => b === "1" && punto(x0 + dx + x, y, 1))));
+  if (Math.floor(i / leds.cps) % 2 === 0) { punto(x0 + 7, 1, 1); punto(x0 + 7, 3, 1); }
+  g.fillStyle = "#050505"; g.fillRect(0, 0, lienzo.width, lienzo.height);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    g.fillStyle = px[y * w + x] ? ON : OFF;
+    g.beginPath(); g.arc(x * dot + dot / 2, y * dot + dot / 2, dot * 0.38, 0, 7); g.fill();
+  }
+}
+medir(16, 96);
+g.fillStyle = "#050505"; g.fillRect(0, 0, lienzo.width, lienzo.height);
+for (let y = 0; y < 96; y++) for (let x = 0; x < 16; x++) {
+  g.fillStyle = OFF; g.beginPath(); g.arc(x * dot + dot / 2, y * dot + dot / 2, dot * 0.38, 0, 7); g.fill();
+}
+requestAnimationFrame(pintar);
+addEventListener("resize", () => leds && medir(leds.w, leds.h));
 
 // El estado lo manda la PC: el último que haya y después cada cambio, al instante.
+function recibir(ev) {
+  const datos = JSON.parse(ev.message);
+  mostrar(datos.estado || datos);                      // (los mensajes viejos traían solo el estado)
+  if (datos.leds && ev.attachment) cargarLeds(datos.leds, ev.attachment.url);
+  else if (datos.estado && !datos.leds) {
+    leds = null; $("#espera").textContent = "EL CARTEL ESTÁ MOSTRANDO OTRA COSA"; $("#espera").hidden = false;
+  }
+}
 async function cargarUltimo() {
   try {
-    const r = await fetch(`${ESTADO}/json?poll=1&since=24h`);
+    const r = await fetch(`${ESTADO}/json?poll=1&since=12h`);
     const lineas = (await r.text()).trim().split("\n").filter(Boolean);
     const ultimo = lineas.map(l => JSON.parse(l)).filter(e => e.event === "message").pop();
-    if (ultimo) mostrar(JSON.parse(ultimo.message));
+    if (ultimo) recibir(ultimo);
   } catch {}
 }
 cargarUltimo();
 const fuente = new EventSource(`${ESTADO}/sse`);
-fuente.onmessage = ev => { try { mostrar(JSON.parse(JSON.parse(ev.data).message)); } catch {} };
+fuente.onmessage = ev => { try { recibir(JSON.parse(ev.data)); } catch {} };
 
 const FRASES = { comer: "¡AHÍ VA LA COMIDA!", limpiar: "¡A LIMPIAR!", jugar: "¡A JUGAR!", curar: "¡REMEDIO EN CAMINO!",
   luz: "LUZ CAMBIADA", planta: "PLANTITA NUEVA", roca: "PIEDRA NUEVA", castillo: "CASTILLO NUEVO", concha: "CONCHA NUEVA", quitar: "DECORACIÓN QUITADA" };
