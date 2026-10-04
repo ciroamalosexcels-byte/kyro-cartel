@@ -99,8 +99,9 @@
 <script>
 const ACCIONES = "https://ntfy.sh/kyro-cartel-2e797e508e-tama";
 const ESTADO = "https://ntfy.sh/kyro-cartel-2e797e508e-tama-estado";
-// Abierta desde el servidor de la PC (localhost:8765/tamagotchi/) habla directo con él, sin ntfy.
-const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
+// Abierta desde el servidor de la PC (localhost:8765 o, desde otra compu de la casa, IP:8766)
+// habla directo con él, sin ntfy. Desde GitHub usa ntfy.
+const LOCAL = location.protocol.startsWith("http") && !location.hostname.endsWith("github.io");
 const ANIMO = { feliz: "FELIZ", hambre: "TIENE HAMBRE", triste: "TRISTE", enfermo: "ENFERMO", dormido: "DURMIENDO" };
 const $ = s => document.querySelector(s);
 
