@@ -212,6 +212,22 @@ async function cargarLeds(meta, url) {
 
 // Qué cuadro está pasando el cartel: el acuario se recarga en cada cambio de minuto con otro
 // recorrido (minuto % variantes); las escenas arrancan cuando se mandaron.
+// Qué cuadro toca a `pasado` ms de que arrancó: el programa puede tener tramos a distinta
+// velocidad (una escena y después el acuario). Devuelve [cuadro, ¿se ven los dos puntos de la hora?].
+function enTramos(meta, pasado) {
+  const tramos = meta.tramos || [[meta.n, meta.ms]];
+  const total = tramos.reduce((a, [n, ms]) => a + n * ms, 0);
+  pasado = Math.max(0, pasado);
+  if (!meta.una_vez) pasado %= total;
+  let i = 0;
+  for (const [n, ms] of tramos) {
+    if (pasado < n * ms) { const k = Math.floor(pasado / ms); return [i + k, Math.floor(k / Math.max(1, Math.round(1000 / ms))) % 2 === 0]; }
+    pasado -= n * ms; i += n;
+  }
+  const [n, ms] = tramos[tramos.length - 1];
+  return [i - 1, Math.floor((n - 1) / Math.max(1, Math.round(1000 / ms))) % 2 === 0];   // una sola vez: queda en el último
+}
+
 function cuadroActual(ahora) {
   let inicio = leds.t0, variante = leds.variante || 0;
   if (leds.por_minuto) {
@@ -220,15 +236,14 @@ function cuadroActual(ahora) {
     variante = Math.floor((inicio - leds.desfase) / 60000) % (leds.variantes || 1);
     if (leds.t0 > inicio && leds.t0 <= ahora) { inicio = leds.t0; variante = leds.variante || 0; }
   }
-  const i = Math.floor(Math.max(0, ahora - inicio) / leds.ms);
-  return [variante, leds.una_vez ? Math.min(leds.n - 1, i) : i % leds.n];   // las escenas, una sola vez
+  return [variante, ...enTramos(leds, ahora - inicio)];
 }
 
 function pintar() {
   requestAnimationFrame(pintar);
   if (!leds || !cuadros.length) return;
-  const ahora = Date.now(), [v, i] = cuadroActual(ahora), hora = new Date().toTimeString().slice(0, 5);
-  const clave = `${v}.${i}.${hora}`;
+  const ahora = Date.now(), [v, i, puntos] = cuadroActual(ahora), hora = new Date().toTimeString().slice(0, 5);
+  const clave = `${v}.${i}.${puntos}.${hora}`;
   if (clave === dibujado) return;
   dibujado = clave;
   const { w, h } = leds, fila = Math.ceil(w / 8), c = cuadros[v * leds.n + i];
@@ -240,7 +255,7 @@ function pintar() {
   for (let y = 0; y < RELOJ_ALTO; y++) for (let x = x0 - 1; x <= x0 + 15; x++) punto(x, y, 0);
   [[hora[0], 0], [hora[1], 4], [hora[3], 8], [hora[4], 12]].forEach(([d, dx]) =>
     DIGITOS[d].forEach((f, y) => [...f].forEach((b, x) => b === "1" && punto(x0 + dx + x, y, 1))));
-  if (Math.floor(i / leds.cps) % 2 === 0) { punto(x0 + 7, 1, 1); punto(x0 + 7, 4, 1); }
+  if (puntos) { punto(x0 + 7, 1, 1); punto(x0 + 7, 4, 1); }
   pintarLeds(px, w, h);
 }
 medir(16, 96);
