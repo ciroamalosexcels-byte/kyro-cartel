@@ -7,7 +7,7 @@
 <meta name="description" content="Escribí un mensaje y aparece en el cartel LED de Kyro.">
 <meta name="theme-color" content="#0b0b0d">
 <style>
-  :root { --bg:#0b0b0d; --panel:#16161a; --line:#2a2a31; --txt:#ececf0; --dim:#8b8b96; --led:#ff2a1a; --ledoff:#2b0d0b; }
+  :root { --bg:#0b0b0d; --panel:#16161a; --line:#2a2a31; --txt:#ececf0; --dim:#8b8b96; --led:#2f8cff; --ledoff:#0b1a2e; }
   * { box-sizing:border-box; }
   html, body { margin:0; background:var(--bg); color:var(--txt); }
   body { font:600 15px/1.45 system-ui, -apple-system, sans-serif; text-transform:uppercase; letter-spacing:.04em; min-height:100vh; display:flex; }
@@ -56,7 +56,7 @@ const CANAL = "https://ntfy.sh/kyro-cartel-2e797e508e";
 const ICONOS = "♪♥★☺☠⚡☀☾♦✓→🔥🍺☕♣⌂".match(/./gu);
 const ANIMS = [["corazon", "♥ CORAZÓN"], ["estrellas", "✦ ESTRELLAS"], ["ecualizador", "▮▮ ECUALIZADOR"],
   ["fuegos", "✺ FUEGOS ARTIFICIALES"], ["carita", "☺ CARITA"], ["lluvia", "♥♥ LLUVIA DE CORAZONES"],
-  ["pacman", "ᗧ PAC-MAN"], ["invasores", "👾 INVASORES"], ["onda", "∿ ONDA"], ["monitor", "♡ MONITOR CARDÍACO"], ["pez", "🐟 PEZ"], ["escarabajo", "🪲 ESCARABAJO PELOTERO"], ["dragon", "🐉 DRAGÓN"], ["ninguna", "✕ NINGUNA"]];
+  ["pacman", "ᗧ PAC-MAN"], ["invasores", "👾 INVASORES"], ["onda", "∿ ONDA"], ["monitor", "♡ MONITOR CARDÍACO"], ["pez", "🐟 PEZ"], ["escarabajo", "🪲 ESCARABAJO PELOTERO"], ["dragon", "🐉 DRAGÓN"], ["burbujas", "○ BURBUJAS"], ["ninguna", "✕ NINGUNA"]];
 let anim = "corazon";
 const $ = s => document.querySelector(s);
 const msg = $("#msg");
@@ -117,7 +117,7 @@ function frame() {
   ctx.fillStyle = "#050505"; ctx.fillRect(0, 0, W * D, H * D);
   for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) {
     const sx = Math.floor(xx - x), on = sx >= 0 && sx < off.width && px[(yy * off.width + sx) * 4 + 3] > 120;
-    ctx.fillStyle = on ? "#ff2a1a" : "#2b0d0b";
+    ctx.fillStyle = on ? "#3d9bff" : "#0b1a2e";
     ctx.beginPath(); ctx.arc(xx * D + D / 2, yy * D + D / 2, D * .38, 0, 7); ctx.fill();
   }
   x -= 0.6; if (x < -off.width) x = W;
