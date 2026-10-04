@@ -36,7 +36,7 @@
   <canvas id="led" width="672" height="112" aria-label="Vista previa del cartel"></canvas>
 
   <div class="card">
-    <label for="msg">ESCRIBÍ TU MENSAJE</label>
+    <label for="msg">ESCRIBÍ TU MENSAJE (O DEJALO VACÍO PARA MANDAR SOLO LA ANIMACIÓN)</label>
     <textarea id="msg" maxlength="120" placeholder="HOLA KYRO ♥"></textarea>
     <div class="row" id="iconos"></div>
     <div class="foot"><span>APARECE EN EL CARTEL EN SEGUNDOS</span><span id="cuenta">0 / 120</span></div>
@@ -73,24 +73,32 @@ $("#anims").onclick = e => {
   const b = e.target.closest(".chip"); if (!b) return;
   anim = b.dataset.id;
   document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === b));
+  actualizar();
 };
 
-function actualizar() { $("#cuenta").textContent = `${[...msg.value].length} / 120`; }
+function actualizar() {
+  $("#cuenta").textContent = `${[...msg.value].length} / 120`;
+  const vacio = !msg.value.trim();
+  $("#enviar").textContent = vacio ? "ENVIAR SOLO LA ANIMACIÓN" : "ENVIAR AL CARTEL";
+  $("#enviar").disabled = vacio && anim === "ninguna";
+}
 msg.oninput = actualizar;
+actualizar();
 
 $("#enviar").onclick = async () => {
   const texto = msg.value.trim();
-  if (!texto) { msg.focus(); return; }
+  if (!texto && anim === "ninguna") { msg.focus(); return; }
   $("#enviar").disabled = true; $("#estado").className = ""; $("#estado").textContent = "ENVIANDO…";
   try {
-    const r = await fetch(`${CANAL}?title=${anim}`, { method: "POST", body: texto });
+    const url = texto ? `${CANAL}?title=${anim}` : `${CANAL}?title=${anim}&tags=solo-animacion`;
+    const r = await fetch(url, { method: "POST", body: texto || "animación" });
     if (!r.ok) throw new Error(r.status);
     $("#estado").className = "ok"; $("#estado").textContent = "¡ENVIADO! MIRÁ EL CARTEL";
     msg.value = ""; actualizar();
   } catch {
     $("#estado").className = "err"; $("#estado").textContent = "NO SE PUDO ENVIAR, PROBÁ DE NUEVO";
   } finally {
-    setTimeout(() => { $("#enviar").disabled = false; }, 1500);
+    setTimeout(actualizar, 1500);
   }
 };
 
