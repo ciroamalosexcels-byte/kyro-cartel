@@ -5,97 +5,147 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KYRO TAMAGOTCHI</title>
 <meta name="description" content="Cuidá al pez del cartel LED de Kyro: dale de comer, limpiale la pecera y decorala.">
-<meta name="theme-color" content="#0b0b0d">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0b0b0d; --egg:#1b2a44; --egg2:#11192b; --line:#2a3550; --txt:#ececf0; --dim:#8b93a6; --led:#3d9bff; --ok:#3ddc84; --warn:#ffb020; --bad:#ff4d4d; }
+  :root { --bg:#000; --led:#0026ff; --brillo:#3d5cff; --apagado:#050a26; --casco:#03040c; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; background:var(--bg); color:var(--txt); }
-  body { font:700 14px/1.4 system-ui, -apple-system, sans-serif; text-transform:uppercase; letter-spacing:.05em; min-height:100vh; display:flex; justify-content:center; }
-  main { width:100%; max-width:440px; padding:20px 16px 40px; display:grid; gap:18px; }
-  .huevo { background:radial-gradient(120% 90% at 30% 20%, var(--egg), var(--egg2)); border:2px solid var(--line); border-radius:50% 50% 46% 46% / 58% 58% 42% 42%; padding:38px 26px 30px; display:grid; gap:14px; box-shadow:0 20px 60px #0008, inset 0 2px 0 #ffffff14; }
-  .marca { text-align:center; font-size:12px; letter-spacing:.35em; color:var(--dim); }
-  .pantalla { position:relative; display:grid; place-items:center; padding:14px; background:#050505; border:3px solid #06223f; border-radius:14px; box-shadow:inset 0 0 30px #000; }
-  #leds { display:block; image-rendering:pixelated; }
-  #espera { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:20px; font-size:11px; color:var(--dim); background:#050505cc; border-radius:11px; }
+  html, body { margin:0; background:var(--bg); color:var(--brillo); }
+  body { font:8px/1.6 "Press Start 2P", ui-monospace, monospace; text-transform:uppercase; min-height:100vh; display:flex; justify-content:center; }
+  main { width:100%; max-width:340px; padding:18px 16px 32px; }
+  .casco { background:var(--casco); border:4px solid var(--led); box-shadow:0 0 0 4px var(--casco), 0 0 0 6px var(--apagado), 0 0 28px #0026ff55; padding:14px 10px 16px; display:grid; gap:12px; }
+  .brilla { color:var(--brillo); text-shadow:0 0 6px var(--led), 0 0 12px var(--led); }
+  h1 { margin:0; text-align:center; font-size:10px; font-weight:400; letter-spacing:.08em; }
+  #animo { text-align:center; min-height:1.6em; }
+  .juego { display:grid; grid-template-columns:52px minmax(0, 1fr) 52px; gap:8px; align-items:start; }
+  .col { display:grid; gap:6px; }
+  .pantalla { position:relative; display:grid; place-items:center; padding:6px; background:#000; border:2px solid var(--apagado); min-height:120px; }
+  #leds { display:block; }
+  #espera { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:10px; font-size:7px; background:#000d; line-height:2; }
   #espera[hidden] { display:none; }
-  #animo { text-align:center; font-size:12px; color:var(--dim); margin-bottom:-6px; }
-  .barras { display:grid; gap:7px; }
-  .barra { display:grid; grid-template-columns:96px 1fr 34px; align-items:center; gap:8px; font-size:11px; color:var(--dim); }
-  .barra .riel { height:10px; background:#0006; border-radius:6px; overflow:hidden; }
-  .barra .nivel { height:100%; border-radius:6px; transition:width .6s, background .6s; }
-  .barra b { text-align:right; color:var(--txt); }
-  .botones { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-  .deco { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
-  button { font:inherit; color:var(--txt); background:#ffffff10; border:1px solid #ffffff1c; border-radius:16px; padding:12px 6px; cursor:pointer; display:grid; gap:4px; justify-items:center; font-size:11px; }
-  button span { font-size:26px; line-height:1; }
-  .deco button span { font-size:22px; }
-  button:active { transform:scale(.95); background:#3d9bff33; }
-  button:disabled { opacity:.45; }
-  .seccion { font-size:11px; color:var(--dim); letter-spacing:.2em; margin-bottom:-6px; }
-  #aviso { text-align:center; min-height:1.4em; color:var(--dim); font-size:12px; }
-  #aviso.ok { color:var(--ok); }
-  #aviso.err { color:var(--bad); }
-  .info { text-align:center; color:var(--dim); font-size:11px; }
-  a { color:var(--led); }
+  button { font:inherit; font-size:6px; color:var(--brillo); background:#000; border:2px solid var(--led); padding:6px 2px 5px; cursor:pointer; display:grid; gap:5px; justify-items:center; text-transform:uppercase; letter-spacing:0; }
+  button svg { width:24px; height:24px; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
+  button:active, button.ok { background:var(--led); color:#000; }
+  button:active svg, button.ok svg { filter:none; }
+  button:disabled { opacity:.4; }
+  .ancho .juego { grid-template-columns:minmax(0, 1fr); }
+  .ancho .pantalla { order:-1; }
+  .ancho .col { grid-template-columns:repeat(5, 1fr); }
+  .barras { display:grid; gap:8px; }
+  .barra { display:grid; grid-template-columns:68px 1fr; align-items:center; gap:8px; font-size:7px; }
+  .segmentos { display:grid; grid-template-columns:repeat(10, 1fr); gap:2px; }
+  .segmentos i { height:8px; background:var(--apagado); }
+  .segmentos i.on { background:var(--led); box-shadow:0 0 5px var(--led); }
+  .barra.baja .segmentos i.on { animation:titila 1s steps(1) infinite; }
+  @keyframes titila { 50% { opacity:.2; } }
+  .musica { display:grid; grid-template-columns:14px minmax(0, 1fr); gap:8px; align-items:center; border-top:2px solid var(--apagado); padding-top:10px; }
+  .musica[hidden] { display:none; }
+  .musica svg { width:14px; height:14px; shape-rendering:crispEdges; }
+  .cinta { min-width:0; overflow:hidden; white-space:nowrap; font-size:7px; }
+  .cinta span { display:inline-block; padding-left:100%; animation:pasa 14s linear infinite; }
+  .cinta.quieta span { padding-left:0; animation:none; }
+  @keyframes pasa { to { transform:translateX(-100%); } }
+  #aviso { text-align:center; min-height:1.6em; font-size:7px; }
+  #aviso.err { animation:titila 1s steps(1) 3; }
+  .info { text-align:center; font-size:6px; color:#2a3a9a; margin-top:14px; line-height:2; }
+  a { color:var(--brillo); }
 </style>
 </head>
 <body>
 <main>
-  <div class="huevo">
-    <div class="marca">● KYRO TAMAGOTCHI ●</div>
-    <div id="animo">—</div>
-    <div class="pantalla">
-      <canvas id="leds"></canvas>
-      <div id="espera">ESPERANDO AL CARTEL…</div>
+  <div class="casco" id="casco">
+    <h1 class="brilla">KYRO TAMAGOTCHI</h1>
+    <div id="animo" class="brilla">—</div>
+
+    <div class="juego">
+      <div class="col" aria-label="Decorar la pecera">
+        <button data-accion="planta" data-icono="planta">PLANTA</button>
+        <button data-accion="roca" data-icono="roca">PIEDRA</button>
+        <button data-accion="castillo" data-icono="castillo">CASTILLO</button>
+        <button data-accion="concha" data-icono="concha">CONCHA</button>
+        <button data-accion="quitar" data-icono="quitar">QUITAR</button>
+      </div>
+      <div class="pantalla">
+        <canvas id="leds"></canvas>
+        <div id="espera" class="brilla">ESPERANDO AL CARTEL…</div>
+      </div>
+      <div class="col" aria-label="Cuidar al pez">
+        <button data-accion="comer" data-icono="comer">COMIDA</button>
+        <button data-accion="limpiar" data-icono="limpiar">LIMPIAR</button>
+        <button data-accion="jugar" data-icono="jugar">JUGAR</button>
+        <button data-accion="curar" data-icono="curar">CURAR</button>
+        <button data-accion="luz" data-icono="luz">LUZ</button>
+      </div>
     </div>
+
     <div class="barras">
-      <div class="barra">PANCITA<div class="riel"><div class="nivel" id="bHambre"></div></div><b id="vHambre">–</b></div>
-      <div class="barra">FELICIDAD<div class="riel"><div class="nivel" id="bFeliz"></div></div><b id="vFeliz">–</b></div>
-      <div class="barra">LIMPIEZA<div class="riel"><div class="nivel" id="bLimpio"></div></div><b id="vLimpio">–</b></div>
+      <div class="barra" id="bHambre">PANCITA<div class="segmentos"></div></div>
+      <div class="barra" id="bFeliz">FELICIDAD<div class="segmentos"></div></div>
+      <div class="barra" id="bLimpio">LIMPIEZA<div class="segmentos"></div></div>
     </div>
-  </div>
 
-  <div class="botones">
-    <button data-accion="comer"><span>🍤</span>COMIDA</button>
-    <button data-accion="limpiar"><span>🧽</span>LIMPIAR</button>
-    <button data-accion="jugar"><span>🎾</span>JUGAR</button>
-    <button data-accion="curar"><span>💊</span>CURAR</button>
-    <button data-accion="luz"><span>💡</span>LUZ</button>
-    <button data-accion="quitar"><span>↩️</span>QUITAR DECO</button>
-  </div>
+    <div class="musica" id="musica" hidden>
+      <svg data-icono="nota" viewBox="0 0 7 8"></svg>
+      <div class="cinta" id="cinta"><span class="brilla" id="cancion"></span></div>
+    </div>
 
-  <div class="seccion">DECORAR LA PECERA</div>
-  <div class="deco">
-    <button data-accion="planta"><span>🌿</span>PLANTA</button>
-    <button data-accion="roca"><span>🪨</span>PIEDRA</button>
-    <button data-accion="castillo"><span>🏰</span>CASTILLO</button>
-    <button data-accion="concha"><span>🐚</span>CONCHA</button>
+    <div id="aviso" class="brilla" role="status"></div>
   </div>
-
-  <div id="aviso" role="status"></div>
-  <div class="info">LOS MISMOS LEDS QUE EL CARTEL · <a href="../">MANDAR UN MENSAJE</a></div>
+  <div class="info">LOS MISMOS LEDS QUE EL CARTEL<br><a href="https://ciroamalosexcels-byte.github.io/kyro-cartel/">MANDAR UN MENSAJE</a></div>
 </main>
 
 <script>
 const ACCIONES = "https://ntfy.sh/kyro-cartel-2e797e508e-tama";
 const ESTADO = "https://ntfy.sh/kyro-cartel-2e797e508e-tama-estado";
-const ANIMO = { feliz: "😊 FELIZ", hambre: "😋 TIENE HAMBRE", triste: "😢 TRISTE", enfermo: "🤒 ENFERMO", dormido: "💤 DURMIENDO" };
+// Abierta desde el servidor de la PC (localhost:8765/tamagotchi/) habla directo con él, sin ntfy.
+const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
+const ANIMO = { feliz: "FELIZ", hambre: "TIENE HAMBRE", triste: "TRISTE", enfermo: "ENFERMO", dormido: "DURMIENDO" };
 const $ = s => document.querySelector(s);
-let estado = null;
 
-function color(v) { return v > 60 ? "var(--ok)" : v > 30 ? "var(--warn)" : "var(--bad)"; }
-function barra(id, v) {
-  $("#b" + id).style.width = v + "%"; $("#b" + id).style.background = color(v); $("#v" + id).textContent = v;
+// --- Íconos de píxeles (los de la decoración son los mismos dibujos que en el cartel) ---
+const ICONOS = {
+  comer:    ["0010101", "0001010", "0000000", "1111111", "1000001", "1011101", "1011101", "1000001", "1111111"],
+  limpiar:  ["0010000100", "0000001000", "1111111111", "1010101011", "1111111111", "1101010101", "1111111111"],
+  jugar:    ["0011100", "0100010", "1010001", "1000001", "1000001", "0100010", "0011100"],
+  curar:    ["0001110000", "0011111000", "0011111000", "0011111000", "0000000000", "0011011000", "0010001000", "0011011000", "0001110000"],
+  luz:      ["0011100", "0100010", "1000001", "1001001", "0101010", "0011100", "0011100", "0001000"],
+  planta:   ["0001000", "0011010", "0101010", "0001110", "1001000", "0101000", "0011000", "0001000"],
+  roca:     ["01110", "11111", "11111"],
+  castillo: ["1010101", "1111111", "0111110", "0101010", "0111110", "0110110", "0110110"],
+  concha:   ["01110", "10101", "11111"],
+  quitar:   ["001000000", "011000000", "111111100", "011000010", "001000001", "000000001", "000000010", "001111100"],
+  nota:     ["0001111", "0001001", "0001001", "0001001", "0111001", "1111111", "0110110", "0000000"],
+};
+function svgDe(filas) {
+  const w = filas[0].length, h = filas.length, lado = Math.max(w, h), dx = (lado - w) / 2, dy = (lado - h) / 2;
+  let r = "";
+  filas.forEach((f, y) => [...f].forEach((b, x) => { if (b === "1") r += `<rect x="${x + dx}" y="${y + dy}" width="1.02" height="1.02"/>`; }));
+  return `<svg viewBox="0 0 ${lado} ${lado}" fill="currentColor" aria-hidden="true">${r}</svg>`;
 }
+document.querySelectorAll("button[data-icono]").forEach(b => b.insertAdjacentHTML("afterbegin", svgDe(ICONOS[b.dataset.icono])));
+$("svg[data-icono=nota]").outerHTML = svgDe(ICONOS.nota);
+document.querySelectorAll(".segmentos").forEach(s => s.innerHTML = "<i></i>".repeat(10));
 
+// --- Estado: barras, humor y la música que suena en la PC ---
+function barra(id, v) {
+  document.querySelectorAll(`#${id} i`).forEach((s, k) => s.classList.toggle("on", k < Math.round(v / 10)));
+  $("#" + id).classList.toggle("baja", v <= 30);
+}
 function mostrar(e) {
-  estado = e;
-  barra("Hambre", 100 - e.hambre); barra("Feliz", e.felicidad); barra("Limpio", e.limpieza);
+  barra("bHambre", 100 - e.hambre); barra("bFeliz", e.felicidad); barra("bLimpio", e.limpieza);
   $("#animo").textContent = ANIMO[e.humor] || e.humor;
+  const musica = "musica" in e ? e.musica : null;
+  $("#musica").hidden = !musica;
+  if (musica && $("#cancion").textContent !== musica) {
+    $("#cancion").textContent = musica;
+    $("#cinta").classList.toggle("quieta", musica.length <= 22);
+  }
 }
 
 // --- La pantalla: los mismos cuadros que pasa el cartel (los manda la PC) + la hora encima ---
-const ON = "#3d9bff", OFF = "#0b1a2e";
+const ON = "#2a4bff", OFF = "#050a26", BRILLO = "#0026ff";
 const DIGITOS = {
   "0": ["111", "101", "101", "101", "111"], "1": ["010", "110", "010", "010", "111"],
   "2": ["111", "001", "111", "100", "111"], "3": ["111", "001", "111", "001", "111"],
@@ -107,10 +157,24 @@ const lienzo = $("#leds"), g = lienzo.getContext("2d");
 let leds = null, cuadros = [], dot = 4, dibujado = "";
 
 function medir(w, h) {
-  const maxW = $(".pantalla").clientWidth - 34, maxH = Math.min(innerHeight * 0.62, 560);
-  dot = Math.max(2, Math.floor(Math.min(maxW / w, maxH / h)));
+  $("#casco").classList.toggle("ancho", w > h);
+  const maxW = $(".pantalla").clientWidth - 16;
+  dot = w > h ? Math.max(2, Math.floor(maxW / w)) : Math.max(2, Math.min(4, Math.floor((innerHeight * 0.62) / h)));
   lienzo.width = w * dot; lienzo.height = h * dot;
+  lienzo.style.width = w * dot + "px"; lienzo.style.height = h * dot + "px";
   dibujado = "";
+}
+
+function pintarLeds(px, w, h) {
+  g.fillStyle = "#000"; g.fillRect(0, 0, lienzo.width, lienzo.height);
+  const r = dot * 0.4;
+  g.shadowBlur = 0; g.fillStyle = OFF;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!px[y * w + x]) g.fillRect(x * dot + dot / 2 - r, y * dot + dot / 2 - r, 2 * r, 2 * r);
+  g.shadowBlur = dot * 1.5; g.shadowColor = BRILLO; g.fillStyle = ON;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (px[y * w + x]) {
+    g.beginPath(); g.arc(x * dot + dot / 2, y * dot + dot / 2, r * 1.1, 0, 7); g.fill();
+  }
+  g.shadowBlur = 0;
 }
 
 async function cargarLeds(meta, url) {
@@ -118,8 +182,8 @@ async function cargarLeds(meta, url) {
     const r = await fetch(url);
     if (!r.ok) throw new Error(r.status);
     const datos = new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream("deflate"))).arrayBuffer());
-    const tam = Math.ceil(meta.w / 8) * meta.h, lista = [];
-    for (let k = 0; k < meta.n; k++) {                  // cada cuadro viene como XOR del anterior
+    const tam = Math.ceil(meta.w / 8) * meta.h, total = meta.n * (meta.variantes || 1), lista = [];
+    for (let k = 0; k < total; k++) {                  // cada cuadro viene como XOR del anterior
       const c = datos.slice(k * tam, (k + 1) * tam);
       if (k) for (let j = 0; j < tam; j++) c[j] ^= lista[k - 1][j];
       lista.push(c);
@@ -132,84 +196,92 @@ async function cargarLeds(meta, url) {
   }
 }
 
+// Qué cuadro está pasando el cartel: el acuario se recarga en cada cambio de minuto con otro
+// recorrido (minuto % variantes); las escenas arrancan cuando se mandaron.
 function cuadroActual(ahora) {
-  let inicio = leds.t0;
-  if (leds.por_minuto) {                                // el acuario se recarga en cada cambio de minuto
+  let inicio = leds.t0, variante = leds.variante || 0;
+  if (leds.por_minuto) {
     inicio = Math.floor(ahora / 60000) * 60000 + leds.desfase;
     if (inicio > ahora) inicio -= 60000;
-    if (leds.t0 > inicio && leds.t0 <= ahora) inicio = leds.t0;
+    variante = Math.floor((inicio - leds.desfase) / 60000) % (leds.variantes || 1);
+    if (leds.t0 > inicio && leds.t0 <= ahora) { inicio = leds.t0; variante = leds.variante || 0; }
   }
-  return Math.floor(Math.max(0, ahora - inicio) / leds.ms) % leds.n;
+  return [variante, Math.floor(Math.max(0, ahora - inicio) / leds.ms) % leds.n];
 }
 
 function pintar() {
   requestAnimationFrame(pintar);
   if (!leds || !cuadros.length) return;
-  const ahora = Date.now(), i = cuadroActual(ahora), hora = new Date().toTimeString().slice(0, 5);
-  const clave = i + hora;
+  const ahora = Date.now(), [v, i] = cuadroActual(ahora), hora = new Date().toTimeString().slice(0, 5);
+  const clave = `${v}.${i}.${hora}`;
   if (clave === dibujado) return;
   dibujado = clave;
-  const { w, h } = leds, fila = Math.ceil(w / 8), c = cuadros[i];
+  const { w, h } = leds, fila = Math.ceil(w / 8), c = cuadros[v * leds.n + i];
   const px = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px[y * w + x] = (c[y * fila + (x >> 3)] >> (7 - (x & 7))) & 1;
-  const punto = (x, y, v) => { if (x >= 0 && x < w && y >= 0 && y < h) px[y * w + x] = v; };
+  const punto = (x, y, val) => { if (x >= 0 && x < w && y >= 0 && y < h) px[y * w + x] = val; };
   // la hora, igual que en el cartel: un renglón arriba con recuadro apagado y los dos puntos titilando
   const x0 = w >= h ? w - 16 : Math.floor((w - 15) / 2);
   for (let y = 0; y <= 5; y++) for (let x = x0 - 1; x <= x0 + 15; x++) punto(x, y, 0);
   [[hora[0], 0], [hora[1], 4], [hora[3], 8], [hora[4], 12]].forEach(([d, dx]) =>
     DIGITOS[d].forEach((f, y) => [...f].forEach((b, x) => b === "1" && punto(x0 + dx + x, y, 1))));
   if (Math.floor(i / leds.cps) % 2 === 0) { punto(x0 + 7, 1, 1); punto(x0 + 7, 3, 1); }
-  g.fillStyle = "#050505"; g.fillRect(0, 0, lienzo.width, lienzo.height);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    g.fillStyle = px[y * w + x] ? ON : OFF;
-    g.beginPath(); g.arc(x * dot + dot / 2, y * dot + dot / 2, dot * 0.38, 0, 7); g.fill();
-  }
+  pintarLeds(px, w, h);
 }
 medir(16, 96);
-g.fillStyle = "#050505"; g.fillRect(0, 0, lienzo.width, lienzo.height);
-for (let y = 0; y < 96; y++) for (let x = 0; x < 16; x++) {
-  g.fillStyle = OFF; g.beginPath(); g.arc(x * dot + dot / 2, y * dot + dot / 2, dot * 0.38, 0, 7); g.fill();
-}
+pintarLeds(new Uint8Array(16 * 96), 16, 96);
 requestAnimationFrame(pintar);
-addEventListener("resize", () => leds && medir(leds.w, leds.h));
+addEventListener("resize", () => { const [w, h] = leds ? [leds.w, leds.h] : [16, 96]; medir(w, h); if (!leds) pintarLeds(new Uint8Array(w * h), w, h); });
 
-// El estado lo manda la PC: el último que haya y después cada cambio, al instante.
-function recibir(ev) {
-  const datos = JSON.parse(ev.message);
+// El estado lo manda la PC: por ntfy (el último que haya y después cada cambio, al instante) o,
+// abierta en la misma PC, preguntándole al servidor local.
+function recibir(datos, urlLeds) {
   mostrar(datos.estado || datos);                      // (los mensajes viejos traían solo el estado)
-  if (datos.leds && ev.attachment) cargarLeds(datos.leds, ev.attachment.url);
-  else if (datos.estado && !datos.leds) {
+  if (datos.leds && urlLeds) {
+    if (!leds || datos.leds.version !== leds.version) cargarLeds(datos.leds, urlLeds);
+    else leds = { ...datos.leds };                     // mismos cuadros, pero puede cambiar cuándo arrancó
+  } else if (datos.estado && !datos.leds) {
     leds = null; $("#espera").textContent = "EL CARTEL ESTÁ MOSTRANDO OTRA COSA"; $("#espera").hidden = false;
   }
 }
-async function cargarUltimo() {
-  try {
-    const r = await fetch(`${ESTADO}/json?poll=1&since=12h`);
-    const lineas = (await r.text()).trim().split("\n").filter(Boolean);
-    const ultimo = lineas.map(l => JSON.parse(l)).filter(e => e.event === "message").pop();
-    if (ultimo) recibir(ultimo);
-  } catch {}
+if (LOCAL) {
+  async function preguntar() {
+    try { recibir(await (await fetch("/api/tama")).json(), "/api/tama/leds"); }
+    catch { $("#espera").textContent = "EL SERVIDOR DE LA PC NO RESPONDE"; $("#espera").hidden = false; }
+  }
+  preguntar(); setInterval(preguntar, 1500);
+} else {
+  const recibirNtfy = ev => recibir(JSON.parse(ev.message), ev.attachment && ev.attachment.url);
+  (async () => {
+    try {
+      const r = await fetch(`${ESTADO}/json?poll=1&since=12h`);
+      const lineas = (await r.text()).trim().split(/\r?\n/).filter(Boolean);
+      const ultimo = lineas.map(l => JSON.parse(l)).filter(e => e.event === "message").pop();
+      if (ultimo) recibirNtfy(ultimo);
+    } catch {}
+  })();
+  const fuente = new EventSource(`${ESTADO}/sse`);
+  fuente.onmessage = ev => { try { recibirNtfy(JSON.parse(ev.data)); } catch {} };
 }
-cargarUltimo();
-const fuente = new EventSource(`${ESTADO}/sse`);
-fuente.onmessage = ev => { try { recibir(JSON.parse(ev.data)); } catch {} };
 
-const FRASES = { comer: "¡AHÍ VA LA COMIDA!", limpiar: "¡A LIMPIAR!", jugar: "¡A JUGAR!", curar: "¡REMEDIO EN CAMINO!",
+const FRASES = { comer: "AHÍ VA LA COMIDA", limpiar: "A LIMPIAR", jugar: "A JUGAR", curar: "REMEDIO EN CAMINO",
   luz: "LUZ CAMBIADA", planta: "PLANTITA NUEVA", roca: "PIEDRA NUEVA", castillo: "CASTILLO NUEVO", concha: "CONCHA NUEVA", quitar: "DECORACIÓN QUITADA" };
 
 document.querySelectorAll("[data-accion]").forEach(b => b.onclick = async () => {
   const accion = b.dataset.accion;
   document.querySelectorAll("[data-accion]").forEach(x => x.disabled = true);
-  $("#aviso").className = ""; $("#aviso").textContent = "ENVIANDO…";
+  b.classList.add("ok");
+  $("#aviso").className = "brilla"; $("#aviso").textContent = "ENVIANDO…";
   try {
-    const r = await fetch(ACCIONES, { method: "POST", body: accion });
+    const r = LOCAL ? await fetch("/api/tama/accion", { method: "POST", body: JSON.stringify({ accion }) })
+                    : await fetch(ACCIONES, { method: "POST", body: accion });
     if (!r.ok) throw new Error(r.status);
-    $("#aviso").className = "ok"; $("#aviso").textContent = FRASES[accion] + " · MIRÁ EL CARTEL";
+    $("#aviso").textContent = FRASES[accion] + " · MIRÁ EL CARTEL";
     if (navigator.vibrate) navigator.vibrate(30);
   } catch {
-    $("#aviso").className = "err"; $("#aviso").textContent = "NO SE PUDO ENVIAR, PROBÁ DE NUEVO";
+    $("#aviso").className = "brilla err"; $("#aviso").textContent = "NO SE PUDO ENVIAR";
   } finally {
-    setTimeout(() => document.querySelectorAll("[data-accion]").forEach(x => x.disabled = false), 1200);
+    setTimeout(() => { document.querySelectorAll("[data-accion]").forEach(x => x.disabled = false); b.classList.remove("ok"); }, 1200);
   }
 });
 </script>
