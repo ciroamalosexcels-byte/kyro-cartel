@@ -57,6 +57,13 @@
   #aviso:empty { display:none; }
   #aviso.err { animation:titila 1s steps(1) 3; }
   a { color:var(--brillo); text-decoration:none; }
+
+  /* retro: el ícono da un saltito a los saltos (pocos cuadros, como en los juegos de 8 bits) y brilla */
+  @keyframes saltito { 0%, 100% { transform:translateY(0) scale(1); } 25% { transform:translateY(-3px) scale(1.12); }
+                       50% { transform:translateY(0) scale(1); } 75% { transform:translateY(-1px) scale(1.06); } }
+  .ico:hover svg, .ico:focus-visible svg, .cuidado:hover svg, .cuidado:focus-visible svg, .chip:hover, button[data-accion]:hover svg {
+    animation:saltito .45s steps(4, jump-none) infinite; filter:drop-shadow(0 0 5px var(--brillo, #4d6bff)); }
+  @media (prefers-reduced-motion:reduce) { .ico:hover svg, .cuidado:hover svg, .chip:hover, button[data-accion]:hover svg { animation:none; } }
 </style>
 </head>
 <body>
@@ -318,6 +325,33 @@ document.querySelectorAll("[data-accion]").forEach(b => b.onclick = async () => 
     setTimeout(() => { document.querySelectorAll("[data-accion]").forEach(x => x.disabled = false); b.classList.remove("ok"); }, 1200);
   }
 });
+
+// --- soniditos retro: un "blip" al pasar por un botón y otro de dos notas al tocarlo ---
+const Retro = (() => {
+  let ctx = null, ultimo = null;
+  const activo = () => { try { return localStorage.getItem("kyro-sonido") !== "0"; } catch { return true; } };
+  const preparar = () => { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); };
+  function nota(f, cuando, dura, vol) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "square"; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, ctx.currentTime + cuando);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + cuando + dura);
+    o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + cuando); o.stop(ctx.currentTime + cuando + dura + 0.02);
+  }
+  const tocar = (tipo) => {
+    if (!ctx || ctx.state !== "running" || !activo()) return;
+    if (tipo === "pasa") nota(1320, 0, 0.03, 0.015);
+    else { nota(660, 0, 0.05, 0.04); nota(990, 0.05, 0.07, 0.04); }
+  };
+  const BOTONES = ".ico, .cuidado, .tecla, .pantallita, .chip, .mandar, .enviar, button[data-accion]";
+  addEventListener("pointerdown", e => { preparar(); if (e.target.closest(BOTONES)) setTimeout(() => tocar("toca"), 0); });
+  addEventListener("pointerover", e => {
+    const b = e.target.closest(BOTONES);
+    if (b && b !== ultimo && !b.disabled) tocar("pasa");
+    ultimo = b;
+  });
+  return { tocar };
+})();
 </script>
 </body>
 </html>
