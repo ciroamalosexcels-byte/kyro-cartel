@@ -45,6 +45,15 @@
          border:2px solid var(--led); background:#000; font-weight:600; }
   .pez svg { width:34px; height:22px; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
   :focus-visible { outline:2px solid var(--brillo); outline-offset:2px; }
+  /* en la compu: el cartel arriba de todo, a la izquierda tu mensaje y a la derecha las animaciones */
+  @media (min-width:900px) {
+    main { max-width:1080px; padding:40px 32px; gap:22px; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr);
+           grid-template-areas:"titulo titulo" "sub sub" "visor visor" "mensaje anims" "enviar pez" "estado ."; align-items:start; }
+    h1 { grid-area:titulo; font-size:40px; } .sub { grid-area:sub; font-size:19px; }
+    .visor { grid-area:visor; } #mensaje { grid-area:mensaje; } #animaciones { grid-area:anims; }
+    .enviar { grid-area:enviar; } #estado { grid-area:estado; } .pez { grid-area:pez; }
+    textarea { min-height:140px; }
+  }
 </style>
 </head>
 <body>
@@ -53,7 +62,7 @@
   <div class="sub">Lo que escribas aparece en el cartel</div>
   <div class="visor"><canvas id="led" width="672" height="112" aria-label="Vista previa del cartel"></canvas></div>
 
-  <section class="modulo">
+  <section class="modulo" id="mensaje">
     <h2>Tu mensaje</h2>
     <p class="ayuda">Si lo dejás vacío, se manda solo la animación.</p>
     <textarea id="msg" maxlength="120" placeholder="Hola Kyro"></textarea>
@@ -61,7 +70,7 @@
     <div class="pie"><span>Aparece en el cartel en segundos</span><span id="cuenta">0 / 120</span></div>
   </section>
 
-  <section class="modulo">
+  <section class="modulo" id="animaciones">
     <h2>Animación al terminar</h2>
     <div class="fila" id="anims"></div>
   </section>
