@@ -308,23 +308,47 @@ if (LOCAL) {
 const FRASES = { comer: "AHÍ VA LA COMIDA", limpiar: "A LIMPIAR", jugar: "A JUGAR", curar: "REMEDIO EN CAMINO",
   luz: "LUZ CAMBIADA", planta: "PLANTITA NUEVA", roca: "PIEDRA NUEVA", castillo: "CASTILLO NUEVO", concha: "CONCHA NUEVA", quitar: "DECORACIÓN QUITADA" };
 
+// Lo que dura cada animación en el cartel (segundos, con lo que tarda en subir): hasta que no
+// termina no se deja tocar otra acción. Es un candado de la página, no depende de la PC ni del cartel.
+const DURACION = { comer: 30, limpiar: 19, jugar: 38, curar: 12, planta: 8, roca: 8, castillo: 8, concha: 8, luz: 2, quitar: 2 };
+let ocupadoHasta = 0, reloj = null;
+try { ocupadoHasta = Number(localStorage.getItem("tama_ocupado") || 0); } catch {}
+
+function actualizarCandado() {
+  const resta = Math.ceil((ocupadoHasta - Date.now()) / 1000);
+  const todos = document.querySelectorAll("[data-accion]");
+  if (resta > 0) {
+    todos.forEach(x => x.disabled = true);
+    $("#aviso").className = "brilla"; $("#aviso").textContent = `ESPERÁ ${resta} S · ESTÁ EN ANIMACIÓN`;
+    reloj = reloj || setInterval(actualizarCandado, 500);
+  } else {
+    todos.forEach(x => { x.disabled = false; x.classList.remove("ok"); });
+    if (reloj) { clearInterval(reloj); reloj = null; $("#aviso").className = ""; $("#aviso").textContent = ""; }
+  }
+}
+
 document.querySelectorAll("[data-accion]").forEach(b => b.onclick = async () => {
+  if (Date.now() < ocupadoHasta) return;
   const accion = b.dataset.accion;
-  document.querySelectorAll("[data-accion]").forEach(x => x.disabled = true);
+  ocupadoHasta = Date.now() + 1500;                       // mientras se envía
+  actualizarCandado();
   b.classList.add("ok");
   $("#aviso").className = "brilla"; $("#aviso").textContent = "ENVIANDO…";
   try {
     const r = LOCAL ? await fetch("/api/tama/accion", { method: "POST", body: JSON.stringify({ accion }) })
                     : await fetch(ACCIONES, { method: "POST", body: accion });
     if (!r.ok) throw new Error(r.status);
-    $("#aviso").textContent = FRASES[accion] + " · MIRÁ EL CARTEL";
+    ocupadoHasta = Date.now() + (DURACION[accion] || 3) * 1000;
+    try { localStorage.setItem("tama_ocupado", String(ocupadoHasta)); } catch {}
     if (navigator.vibrate) navigator.vibrate(30);
+    actualizarCandado();
   } catch {
+    ocupadoHasta = Date.now() + 1200;
+    actualizarCandado();
     $("#aviso").className = "brilla err"; $("#aviso").textContent = "NO SE PUDO ENVIAR";
-  } finally {
-    setTimeout(() => { document.querySelectorAll("[data-accion]").forEach(x => x.disabled = false); b.classList.remove("ok"); }, 1200);
   }
 });
+actualizarCandado();
 
 // --- soniditos retro: un "blip" al pasar por un botón y otro de dos notas al tocarlo ---
 const Retro = (() => {
