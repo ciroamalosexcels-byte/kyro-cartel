@@ -310,7 +310,7 @@ const FRASES = { comer: "AHÍ VA LA COMIDA", limpiar: "A LIMPIAR", jugar: "A JUG
 
 // Lo que dura cada animación en el cartel (segundos, con lo que tarda en subir): hasta que no
 // termina no se deja tocar otra acción. Es un candado de la página, no depende de la PC ni del cartel.
-const DURACION = { comer: 30, limpiar: 19, jugar: 38, curar: 12, planta: 8, roca: 8, castillo: 8, concha: 8, luz: 2, quitar: 2 };
+const DURACION = { comer: 24, limpiar: 18, jugar: 24, curar: 11, planta: 7, roca: 7, castillo: 7, concha: 7, luz: 2, quitar: 2 };
 let ocupadoHasta = 0, reloj = null;
 try { ocupadoHasta = Number(localStorage.getItem("tama_ocupado") || 0); } catch {}
 
