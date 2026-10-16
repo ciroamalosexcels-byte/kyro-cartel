@@ -44,13 +44,26 @@
   .pez { display:flex; align-items:center; justify-content:center; gap:12px; padding:14px; color:var(--brillo); text-decoration:none;
          border:2px solid var(--led); background:#000; font-weight:600; }
   .pez svg { width:34px; height:22px; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
+  input.nombre { width:100%; background:#000; color:var(--texto); border:2px solid var(--apagado); padding:12px 14px; font:inherit; font-size:20px; }
+  input.nombre:focus { outline:none; border-color:var(--led); box-shadow:0 0 12px #0026ff66; }
+  .grid20 { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+  .cel { background:#000; border:2px solid var(--led); color:var(--brillo); padding:8px 2px 6px; cursor:pointer; display:grid; gap:4px;
+         place-items:center; font:inherit; font-size:11px; font-weight:600; line-height:1.1; text-align:center; }
+  .cel svg { width:30px; height:30px; shape-rendering:crispEdges; filter:drop-shadow(0 0 3px var(--led)); }
+  .cel.on { background:var(--brillo); color:#000; box-shadow:0 0 14px #0026ff88; }
+  .cel.on svg { filter:none; }
+  .quien { display:flex; align-items:center; gap:10px; justify-content:space-between; padding:10px 14px; background:var(--casco);
+           border:2px solid var(--led); }
+  .quien b { color:var(--brillo); } .quien svg { width:24px; height:24px; vertical-align:middle; margin-right:8px; shape-rendering:crispEdges; }
+  .quien button { background:#000; color:var(--brillo); border:2px solid var(--led); padding:6px 12px; font:inherit; font-weight:600; cursor:pointer; }
+  [hidden] { display:none !important; }
   :focus-visible { outline:2px solid var(--brillo); outline-offset:2px; }
   /* en la compu: el cartel arriba de todo, a la izquierda tu mensaje y a la derecha las animaciones */
   @media (min-width:900px) {
     main { max-width:1080px; padding:40px 32px; gap:22px; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr);
-           grid-template-areas:"titulo titulo" "sub sub" "visor visor" "mensaje anims" "enviar pez" "estado ."; align-items:start; }
+           grid-template-areas:"titulo titulo" "sub sub" "visor visor" "login login" "quien quien" "mensaje mensaje" "enviar pez" "estado ."; align-items:start; }
     h1 { grid-area:titulo; font-size:40px; } .sub { grid-area:sub; font-size:19px; }
-    .visor { grid-area:visor; } #mensaje { grid-area:mensaje; } #animaciones { grid-area:anims; }
+    .visor { grid-area:visor; } #mensaje { grid-area:mensaje; } #login { grid-area:login; } .quien { grid-area:quien; }
     .enviar { grid-area:enviar; } #estado { grid-area:estado; } .pez { grid-area:pez; }
     textarea { min-height:140px; }
   }
@@ -69,20 +82,25 @@
   <div class="sub">Lo que escribas aparece en el cartel</div>
   <div class="visor"><canvas id="led" width="672" height="112" aria-label="Vista previa del cartel"></canvas></div>
 
-  <section class="modulo" id="mensaje">
+  <section class="modulo" id="login">
+    <h2>Entrá al cartel</h2>
+    <p class="ayuda">Poné tu nombre y elegí tu ícono: cada uno hace una animación distinta.</p>
+    <input class="nombre" id="nombre" maxlength="12" placeholder="Tu nombre" autocomplete="nickname" aria-label="Tu nombre">
+    <div class="grid20" id="grid20" role="radiogroup" aria-label="Elegí tu ícono"></div>
+    <button class="enviar" id="entrar" type="button">Entrar</button>
+  </section>
+
+  <div class="quien" id="quien" hidden><span id="quienTxt"></span><button type="button" id="salir">Cambiar</button></div>
+
+  <section class="modulo" id="mensaje" hidden>
     <h2>Tu mensaje</h2>
-    <p class="ayuda">Si lo dejás vacío, se manda solo la animación.</p>
+    <p class="ayuda">Sale con tu nombre y tu animación. Si lo dejás vacío, sale solo tu nombre con la animación.</p>
     <textarea id="msg" maxlength="120" placeholder="Hola Kyro"></textarea>
     <div class="fila" id="iconos" aria-label="Agregar un ícono"></div>
     <div class="pie"><span>Aparece en el cartel en segundos</span><span id="cuenta">0 / 120</span></div>
   </section>
 
-  <section class="modulo" id="animaciones">
-    <h2>Animación al terminar</h2>
-    <div class="fila" id="anims"></div>
-  </section>
-
-  <button class="enviar" id="enviar">Mandar al cartel</button>
+  <button class="enviar" id="enviar" hidden>Mandar al cartel</button>
   <div id="estado" role="status"></div>
   <a class="pez" href="tamagotchi/"><svg id="svgPez" viewBox="0 0 10 6" fill="currentColor" aria-hidden="true"></svg>Jugar con el Tamagotchi del cartel</a>
 </main>
@@ -91,11 +109,32 @@
 const CANAL = "https://ntfy.sh/kyro-cartel-2e797e508e";
 // Los mismos dibujos de LEDs que usa el cartel para cada ícono (fuente.ICONOS)
 const ICONOS = [["♪", "Nota", ["0001100", "0001110", "0001011", "0001001", "0111000", "1111000", "0110000"]], ["♥", "Corazón", ["0110110", "1111111", "1111111", "1111111", "0111110", "0011100", "0001000"]], ["★", "Estrella", ["0001000", "0001000", "1111111", "0111110", "0011100", "0110110", "1100011"]], ["☺", "Carita", ["0111110", "1000001", "1010101", "1000001", "1011101", "1000001", "0111110"]], ["☠", "Calavera", ["0111110", "1111111", "1001001", "1111111", "0110110", "0111110", "0101010"]], ["⚡", "Rayo", ["0001110", "0011100", "0111000", "1111111", "0001110", "0011100", "0011000"]], ["☀", "Sol", ["1001001", "0101010", "0011100", "1111111", "0011100", "0101010", "1001001"]], ["☾", "Luna", ["0011100", "0110000", "1100000", "1100000", "1100000", "0110000", "0011100"]], ["♦", "Diamante", ["0001000", "0011100", "0111110", "1111111", "0111110", "0011100", "0001000"]], ["✓", "OK", ["0000001", "0000011", "0000110", "1001100", "1111000", "0110000", "0000000"]], ["→", "Flecha", ["0001000", "0001100", "1111110", "1111111", "1111110", "0001100", "0001000"]], ["🔥", "Fuego", ["0001000", "0011000", "0011100", "0111110", "1110111", "1100011", "0111110"]], ["🍺", "Birra", ["0111100", "1111110", "1000011", "1000101", "1000101", "1000011", "1111110"]], ["☕", "Café", ["0100100", "0010010", "0000000", "1111110", "1111101", "1111110", "0111100"]], ["♣", "Trébol", ["0011100", "0011100", "1101011", "1111111", "1101011", "0001000", "0011100"]], ["⌂", "Casa", ["0001000", "0011100", "0111110", "1111111", "0100010", "0101010", "0101010"]]];
-const ANIMS = [["corazon", "Corazón"], ["estrellas", "Estrellas"], ["ecualizador", "Ecualizador"], ["fuegos", "Fuegos artificiales"],
-  ["carita", "Carita"], ["lluvia", "Lluvia de corazones"], ["pacman", "Pac-Man"], ["invasores", "Invasores"], ["onda", "Onda"],
-  ["monitor", "Monitor cardíaco"], ["pez", "Pez"], ["escarabajo", "Escarabajo pelotero"], ["dragon", "Dragón"], ["burbujas", "Burbujas"],
-  ["ninguna", "Ninguna"]];
-let anim = "corazon";
+// 20 íconos = 20 animaciones del cartel (el código es el de animaciones.CODIGOS del servidor)
+const PERSONAJES = [
+  ["corazon", "Corazón", ["0110110", "1111111", "1111111", "1111111", "0111110", "0011100", "0001000"]],
+  ["estrellas", "Estrellas", ["0001000", "0001000", "1111111", "0111110", "0011100", "0110110", "1100011"]],
+  ["ecualizador", "Ecualizador", ["0000100", "0100100", "0100101", "1100101", "1101101", "1101111", "1111111"]],
+  ["fuegos", "Fuegos", ["1001001", "0101010", "0011100", "1110111", "0011100", "0101010", "1001001"]],
+  ["carita", "Carita", ["0111110", "1000001", "1010101", "1000001", "1011101", "1000001", "0111110"]],
+  ["lluvia", "Lluvia", ["0110110", "1111111", "0111110", "0011100", "0100010", "0001000", "0100010"]],
+  ["pacman", "Pac-Man", ["0011100", "0111110", "1111000", "1110000", "1111000", "0111110", "0011100"]],
+  ["invasores", "Invasor", ["0100010", "0010100", "0111110", "1101011", "1111111", "1011101", "0100010"]],
+  ["onda", "Onda", ["0000000", "0110000", "1001001", "0000110", "0000000", "0110000", "1001001"]],
+  ["monitor", "Latido", ["0000000", "0000100", "0000100", "1110110", "0000010", "0000010", "0000000"]],
+  ["pez", "Pez", ["0000000", "0001001", "0111111", "1101111", "0111111", "0001001", "0000000"]],
+  ["escarabajo", "Escarabajo", ["0100010", "0010100", "0111110", "1111111", "1011101", "0111110", "0101010"]],
+  ["dragon", "Dragón", ["1010000", "0111100", "1111110", "1011111", "1111100", "0111000", "0010000"]],
+  ["burbujas", "Burbujas", ["0110000", "1001000", "0110000", "0000110", "0001001", "0000110", "0000000"]],
+  ["fuego", "Fuego", ["0001000", "0011000", "0011100", "0111110", "1110111", "1100011", "0111110"]],
+  ["tormenta", "Tormenta", ["0111100", "1111110", "1111111", "0001100", "0011000", "0001100", "0010000"]],
+  ["cohete", "Cohete", ["0001000", "0011100", "0011100", "0011100", "0111110", "1011101", "0001000"]],
+  ["notas", "Notas", ["0001100", "0001110", "0001011", "0001001", "0111000", "1111000", "0110000"]],
+  ["sol", "Sol", ["1001001", "0101010", "0011100", "1111111", "0011100", "0101010", "1001001"]],
+  ["calavera", "Calavera", ["0111110", "1111111", "1001001", "1111111", "0110110", "0111110", "0101010"]],
+];
+const PERSONAJE = Object.fromEntries(PERSONAJES.map(p => [p[0], p]));
+let anim = "corazon", nombre = "";
+try { const u = JSON.parse(localStorage.getItem("kyro-usuario") || "null"); if (u && PERSONAJE[u.icono]) { anim = u.icono; nombre = u.nombre || ""; } } catch {}
 const $ = s => document.querySelector(s);
 const msg = $("#msg");
 
@@ -114,30 +153,51 @@ $("#iconos").onclick = e => {
   msg.focus(); msg.selectionStart = msg.selectionEnd = a + c.length; actualizar();
 };
 
-$("#anims").innerHTML = ANIMS.map(([id, n]) => `<button type="button" class="chip${id === anim ? " on" : ""}" data-id="${id}">${n}</button>`).join("");
-$("#anims").onclick = e => {
-  const b = e.target.closest(".chip"); if (!b) return;
+const limpiarNombre = v => [...v.replace(/[:\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim()].slice(0, 12).join("");
+$("#grid20").innerHTML = PERSONAJES.map(([id, n, f]) =>
+  `<button type="button" class="cel${id === anim ? " on" : ""}" data-id="${id}" role="radio" aria-checked="${id === anim}" aria-label="${n}">${svgDe(f)}<span>${n}</span></button>`).join("");
+$("#grid20").onclick = e => {
+  const b = e.target.closest(".cel"); if (!b) return;
   anim = b.dataset.id;
-  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === b));
-  actualizar();
+  document.querySelectorAll(".cel").forEach(c => { c.classList.toggle("on", c === b); c.setAttribute("aria-checked", c === b); });
+  validarLogin();
 };
+function validarLogin() { $("#entrar").disabled = !limpiarNombre($("#nombre").value); }
+$("#nombre").value = nombre;
+$("#nombre").oninput = validarLogin;
+function vista() {                         // login o formulario, según haya sesión
+  const dentro = !!nombre;
+  $("#login").hidden = dentro; $("#quien").hidden = !dentro; $("#mensaje").hidden = !dentro; $("#enviar").hidden = !dentro;
+  if (dentro) {
+    $("#quienTxt").innerHTML = `${svgDe(PERSONAJE[anim][2])}<b>${nombre}</b> · ${PERSONAJE[anim][1]}`;
+    msg.maxLength = Math.max(1, 120 - [...nombre].length - 2);
+  }
+  validarLogin(); actualizar();
+}
+$("#entrar").onclick = () => {
+  nombre = limpiarNombre($("#nombre").value);
+  if (!nombre) { $("#nombre").focus(); return; }
+  try { localStorage.setItem("kyro-usuario", JSON.stringify({ nombre, icono: anim })); } catch {}
+  vista();
+};
+$("#salir").onclick = () => { nombre = ""; try { localStorage.removeItem("kyro-usuario"); } catch {} $("#nombre").value = ""; vista(); };
 
 function actualizar() {
   $("#cuenta").textContent = `${[...msg.value].length} / 120`;
   const vacio = !msg.value.trim();
-  $("#enviar").textContent = vacio ? "Mandar solo la animación" : "Mandar al cartel";
-  $("#enviar").disabled = vacio && anim === "ninguna";
+  $("#enviar").textContent = vacio ? "Mandar mi animación" : "Mandar al cartel";
+  $("#enviar").disabled = !nombre;
 }
 msg.oninput = actualizar;
-actualizar();
+vista();
 
 $("#enviar").onclick = async () => {
   const texto = msg.value.trim();
-  if (!texto && anim === "ninguna") { msg.focus(); return; }
+  if (!nombre) return;
   $("#enviar").disabled = true; $("#estado").textContent = "Mandando…";
   try {
-    const url = texto ? `${CANAL}?title=${anim}` : `${CANAL}?title=${anim}&tags=solo-animacion`;
-    const r = await fetch(url, { method: "POST", body: texto || "animación" });
+    const cuerpo = texto ? `${nombre}: ${texto}` : nombre;            // siempre sale con el nombre
+    const r = await fetch(`${CANAL}?title=${anim}`, { method: "POST", body: cuerpo });
     if (!r.ok) throw new Error(r.status);
     $("#estado").textContent = "Mandado: mirá el cartel";
     msg.value = ""; actualizar();
@@ -154,7 +214,7 @@ const off = document.createElement("canvas"), octx = off.getContext("2d");
 const MAPA = Object.fromEntries(ICONOS.map(([c, , f]) => [c, f]));
 let x = W;
 function frame() {
-  const partes = [...(msg.value.trim() || "Escribí tu mensaje").toUpperCase()];
+  const partes = [...(nombre ? (msg.value.trim() ? `${nombre}: ${msg.value.trim()}` : nombre) : "Kyro").toUpperCase()];
   octx.font = "bold 14px monospace";
   const ancho = partes.reduce((a, c) => a + (MAPA[c] ? 16 : octx.measureText(c).width), 0);
   off.width = Math.ceil(ancho) + 4; off.height = H;
